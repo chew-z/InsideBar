@@ -10,15 +10,16 @@
 #include <TradeTools\TradeTools5.mqh>
 #include <stdlib.mqh>
 
-int magic_number_1 = 23456789;
-int StopLevel;
+input int End_Hour = 22;
+int magic_number_1 = 32547698;
 string AlertText ="";
 string  AlertEmailSubject  = "";
 string orderComment = "InsideBar_05";
+int contracts = 0;
+
+int StopLevel;
 static int BarTime;
 static int t; //
-int contracts = 0;
-int maxContracts       = 10;
 double Lots;
 double StopLoss, TakeProfit;
 int ticketArr[];
@@ -29,7 +30,7 @@ int OnInit()     {
    ArrayResize(ticketArr, maxContracts, maxContracts);
    for(int i=0; i < maxContracts; i++) //re-initialize table with order tickets
         ticketArr[i] = 0;
-   AlertEmailSubject = Symbol() + " Pin-pin 2.0 alert";
+   AlertEmailSubject = Symbol() + " " + orderComment + " alert";
    if (Digits == 5 || Digits == 3){    // Adjust for five (5) digit brokers.
       pips2dbl    = Point*10; pips2points = 10;   Digits_pips = 1;
    } else {    pips2dbl    = Point;    pips2points =  1;   Digits_pips = 0; }
@@ -63,9 +64,8 @@ int cnt, check;
    cnt = f_OrdersTotal(magic_number_1, ticketArr) + 1;   //how many open lots?
    contracts = f_Money_Management() - cnt;               //how many possible?
 // ENTER MARKET CONDITIONS
-if( cnt < maxContracts )   { //if we are able to open new lots...
-  contracts = 1;
-  datetime expiration = StrToTime( "23:55" );
+    if( cnt < maxContracts )   { //if we are able to open new lots...
+      datetime expiration = StrToTime( End_Hour+":55" );
 // check for long position (BUY) possibility
       if(LongBuy == true )      { // pozycja z sygnalu
          price = NormalizeDouble(H + 1*pips2dbl, Digits);
@@ -103,7 +103,7 @@ if( cnt < maxContracts )   { //if we are able to open new lots...
    while (cnt >= 0) {                              //Print ("Ticket #", ticketArr[k]);
       if(OrderSelect(ticketArr[cnt], SELECT_BY_TICKET, MODE_TRADES) )   {
 // EXIT MARKET [time exit]
-         if( (OrderType() == OP_BUY || OrderType() == OP_SELL) && TimeHour(Time[0]) == 22 )   {
+         if( (OrderType() == OP_BUY || OrderType() == OP_SELL) && TimeHour(Time[0]) == End_Hour )   {
                   RefreshRates();
                   if(TradeIsBusy() < 0) // Trade Busy semaphore
                      break;
