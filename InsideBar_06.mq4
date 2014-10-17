@@ -1,27 +1,26 @@
 //+------------------------------------------------------------------+
 //             Copyright © 2012, 2013, 2014 chew-z                   |
-// v .05 - InsideBar setup stub                                      |
+// v .06 - InsideBar setup stub                                      |
 // 1) searches for Daily Inside Bars pattern within last K days      |
 // 2) exits at end of the day                                        |
 // 3) logic exactly? as in Python                                    |
 //+------------------------------------------------------------------+
-#property copyright "InsideBar_05 © 2012-2014 chew-z"
+#property copyright "InsideBar_06 © 2012-2014 chew-z"
 #include <TradeContext.mq4>
 #include <TradeTools\TradeTools5.mqh>
 #include <stdlib.mqh>
 
 input int End_Hour = 22;
+
 int magic_number_1 = 32547698;
 string AlertText ="";
 string  AlertEmailSubject  = "";
-string orderComment = "InsideBar_05";
+string orderComment = "InsideBar_06";
 int contracts = 0;
 
 int StopLevel;
 static int BarTime;
 static int t; //
-double Lots;
-double StopLoss, TakeProfit;
 int ticketArr[];
 
 //--------------------------
@@ -60,12 +59,13 @@ int cnt, check;
     if (MotherBar > 1 && isInsideBar(MotherBar))
       ShortBuy = True;
 // MONEY MANAGEMENT
-   Lots =  maxLots;
+   double Lots =  maxLots;
    cnt = f_OrdersTotal(magic_number_1, ticketArr) + 1;   //how many open lots?
    contracts = f_Money_Management() - cnt;               //how many possible?
+   double TakeProfit, StopLoss;
 // ENTER MARKET CONDITIONS
     if( cnt < maxContracts )   { //if we are able to open new lots...
-      datetime expiration = StrToTime( End_Hour+":55" );
+      datetime expiration = StrToTime( (End_Hour-1)+":55" );
 // check for long position (BUY) possibility
       if(LongBuy == true )      { // pozycja z sygnalu
          price = NormalizeDouble(H + 1*pips2dbl, Digits);
@@ -78,7 +78,7 @@ int cnt, check;
          if(check == 0)         {
               AlertText = "BUY stop order placed : " + Symbol() + ", " + TFToStr(Period())+ " -\r"
                + orderComment + " " + contracts + " order(s) opened. \rPrice = " + DoubleToStr(Ask, 5) + ", L = " + DoubleToStr(L, 5);
-         }  else { AlertText = "Error placing BUY limit order : " + ErrorDescription(check) + ". \rPrice = " + DoubleToStr(Ask, 5) + ", L = " + DoubleToStr(L, 5); }
+         }  else { AlertText = "Error placing BUY stop order : " + ErrorDescription(check) + ". \rPrice = " + DoubleToStr(Ask, 5) + ", L = " + DoubleToStr(L, 5); }
          f_SendAlerts(AlertText);
       }
 // check for short position (SELL) possibility
@@ -100,14 +100,16 @@ int cnt, check;
   } // if isNewDay
   if (isNewBar) {
    cnt = f_OrdersTotal(magic_number_1, ticketArr); //-1 = no active orders
-   while (cnt >= 0) {                              //Print ("Ticket #", ticketArr[k]);
+   while ( cnt >= 0) {                              //Print ("Ticket #", ticketArr[k]);
       if(OrderSelect(ticketArr[cnt], SELECT_BY_TICKET, MODE_TRADES) )   {
 // EXIT MARKET [time exit]
-         if( (OrderType() == OP_BUY || OrderType() == OP_SELL) && TimeHour(Time[0]) == End_Hour )   {
-                  RefreshRates();
+         if(TimeHour(Time[0]) == End_Hour && (OrderType() == OP_BUY || OrderType() == OP_SELL) )   {
                   if(TradeIsBusy() < 0) // Trade Busy semaphore
                      break;
-                  check = OrderClose(OrderTicket(),OrderLots(), Bid, 5, Violet);
+                  RefreshRates();
+                  if (OrderType()==OP_SELL) price = Ask;
+                  if (OrderType()==OP_BUY)  price = Bid;
+                  check = OrderClose(OrderTicket(), OrderLots(), price, 5, Violet);
                   TradeIsNotBusy();
                   f_SendAlerts(orderComment + " trade exit attempted.\rResult = " + ErrorDescription(GetLastError()) + ". \rPrice = " + DoubleToStr(Ask, 5));
          }
@@ -119,9 +121,9 @@ int cnt, check;
 } // exit OnTick()
 
 ////////////////////////////////////////////////////////////////////////////
-int MotherBar(int K) { //find largest bar within last K bars
-int MoBar = K;
-  for(int i=K; i > 1; i--)
+int MotherBar(int k) { //find largest bar within last K bars
+int MoBar = k;
+  for(int i = k; i > 1; i--)
     if (BarSize(i) < BarSize(i-1))
       MoBar = i-1;
 
@@ -131,7 +133,7 @@ return (MoBar);
 bool isInsideBar(int k) { // is largest (k) bar completely overshadowing inside bar?
   int iDay = iBarShift(NULL, PERIOD_D1, Time[0], false);
   if (iLow(NULL, PERIOD_D1, iDay+k) < iLow(NULL, PERIOD_D1, iDay+1)
-    && iHigh(NULL, PERIOD_D1, k) > iHigh(NULL, PERIOD_D1, iDay+1))
+    && iHigh(NULL, PERIOD_D1, iDay+k) > iHigh(NULL, PERIOD_D1, iDay+1))
     return true;
 
 return false;
@@ -146,8 +148,9 @@ return (h-l);
 }
 
 double BodySize(int i) {
-    double c = iClose(NULL, PERIOD_D1, i);
-    double o = iOpen(NULL, PERIOD_D1, i);
+    int iDay = iBarShift(NULL, PERIOD_D1, Time[0], false);
+    double c = iClose(NULL, PERIOD_D1, iDay+i);
+    double o = iOpen(NULL, PERIOD_D1, iDay+i);
 
 return MathAbs(c-o);
 }
