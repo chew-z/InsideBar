@@ -10,8 +10,6 @@
 #include <TradeTools\TradeTools5.mqh>
 #include <stdlib.mqh>
 
-input int End_Hour = 22;
-
 int magic_number_1 = 32547698;
 string AlertText ="";
 string  AlertEmailSubject  = "";
@@ -51,12 +49,13 @@ int cnt, check;
       ticketArr[i] = 0;
 
    int MotherBar = MotherBar(K);
-   L = iLow(NULL, PERIOD_D1, MotherBar);
-   H = iHigh(NULL, PERIOD_D1, MotherBar);
+   int iDay = iBarShift(NULL, PERIOD_D1, Time[0], false);
+   L = iLow(NULL, PERIOD_D1, iDay+1);
+   H = iHigh(NULL, PERIOD_D1, iDay+1);
   // DISCOVER SIGNALS
-    if (MotherBar > 1 && isInsideBar(MotherBar))
+    if (MotherBar > 1 && isInsideBar(MotherBar) && BarSize(1) > minBar*pips2dbl)
       LongBuy = True;
-    if (MotherBar > 1 && isInsideBar(MotherBar))
+    if (MotherBar > 1 && isInsideBar(MotherBar) && BarSize(1) > minBar*pips2dbl)
       ShortBuy = True;
 // MONEY MANAGEMENT
    double Lots =  maxLots;
@@ -120,37 +119,4 @@ int cnt, check;
 
 } // exit OnTick()
 
-////////////////////////////////////////////////////////////////////////////
-int MotherBar(int k) { //find largest bar within last K bars
-int MoBar = k;
-  for(int i = k; i > 1; i--)
-    if (BarSize(i) < BarSize(i-1))
-      MoBar = i-1;
 
-return (MoBar);
-}
-
-bool isInsideBar(int k) { // is largest (k) bar completely overshadowing inside bar?
-  int iDay = iBarShift(NULL, PERIOD_D1, Time[0], false);
-  if (iLow(NULL, PERIOD_D1, iDay+k) < iLow(NULL, PERIOD_D1, iDay+1)
-    && iHigh(NULL, PERIOD_D1, iDay+k) > iHigh(NULL, PERIOD_D1, iDay+1))
-    return true;
-
-return false;
-}
-
-double BarSize(int i) {
-    int iDay = iBarShift(NULL, PERIOD_D1, Time[0], false);
-    double l = iLow(NULL, PERIOD_D1, iDay+i);
-    double h = iHigh(NULL, PERIOD_D1, iDay+i);
-
-return (h-l);
-}
-
-double BodySize(int i) {
-    int iDay = iBarShift(NULL, PERIOD_D1, Time[0], false);
-    double c = iClose(NULL, PERIOD_D1, iDay+i);
-    double o = iOpen(NULL, PERIOD_D1, iDay+i);
-
-return MathAbs(c-o);
-}
