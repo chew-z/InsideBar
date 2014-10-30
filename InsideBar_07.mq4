@@ -53,9 +53,9 @@ int cnt, check;
    L = iLow(NULL, PERIOD_D1, iDay+1);
    H = iHigh(NULL, PERIOD_D1, iDay+1);
   // DISCOVER SIGNALS
-    if (MotherBar > 1 && isInsideBar(MotherBar) && BarSize(1) > minBar*pips2dbl)
+    if (DayOfWeek() > 1 && MotherBar > 1 && isInsideBar(MotherBar) && BarSize(1) > minBar*pips2dbl)
       LongBuy = True;
-    if (MotherBar > 1 && isInsideBar(MotherBar) && BarSize(1) > minBar*pips2dbl)
+    if (DayOfWeek() > 1 && MotherBar > 1 && isInsideBar(MotherBar) && BarSize(1) > minBar*pips2dbl)
       ShortBuy = True;
 // MONEY MANAGEMENT
    double Lots =  maxLots;
