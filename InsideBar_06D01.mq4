@@ -1,8 +1,8 @@
 //+------------------------------------------------------------------+
 //             Copyright © 2012, 2013, 2014 chew-z                   |
-// v .06 - InsideBar setup stub                                      |
+// v .06D01 - InsideBar setup stub                                   |
 // 1) searches for Daily Inside Bars pattern within last K days      |
-// 2) exits at end of the day                                        |
+// 2) this subversion exits at end of the day (beginning of next day)|
 // 3) logic exactly? as in Python                                    |
 //+------------------------------------------------------------------+
 #property copyright "InsideBar_06D01 © 2012-2014 chew-z"
@@ -49,7 +49,7 @@ int cnt, cntLimit, check;
    cnt = f_OrdersTotal(magic_number_1, ticketArr); //-1 = no active orders
    while ( cnt >= 0) {                              //Print ("Ticket #", ticketArr[k]);
       if(OrderSelect(ticketArr[cnt], SELECT_BY_TICKET, MODE_TRADES) )   {
-// EXIT MARKET [on next day Open, suboptimal]
+// First EXIT MARKET [on next day Open, suboptimal]
          if(OrderType() == OP_BUY || OrderType() == OP_SELL )   {
                   if(TradeIsBusy() < 0) // Trade Busy semaphore
                      break;
@@ -80,13 +80,12 @@ int cnt, cntLimit, check;
 // MONEY MANAGEMENT
    double Lots =  maxLots;
    cnt = f_OrdersTotal(magic_number_1, ticketArr) + 1;   //how many open lots?
-   cntLimit =f_LimitOrders(magic_number_1, ticketArrLimit); //are there already limit orders placed? [in case of restart]
+   cntLimit = f_LimitOrders(magic_number_1, ticketArrLimit); //are there already limit orders placed? [in case of restart]
    contracts = f_Money_Management() - cnt;               //how many possible?
    double TakeProfit, StopLoss;
-// ENTER MARKET CONDITIONS
-    if( cnt < maxContracts && cntLimit < 0 )   { //if we are able to open new lots...
-      datetime expiration = StrToTime( (End_Hour-1)+":55" );
-      Print("expiration = "+ TimeToStr(expiration, TIME_DATE|TIME_MINUTES));
+// Next ENTER MARKET
+    if( cnt < maxContracts && cntLimit < 0 )   { //if we are able to place new orders...
+      datetime expiration = StrToTime( End_Hour+":55" );
 // check for long position (BUY) possibility
       if(LongBuy == true )      { // pozycja z sygnalu
          price = NormalizeDouble(H, Digits);

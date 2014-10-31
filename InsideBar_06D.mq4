@@ -19,7 +19,7 @@ int contracts = 0;
 int StopLevel;
 static int BarTime;
 static int t; //
-int ticketArr[];
+int ticketArr[], ticketArrLimit[];
 
 //--------------------------
 int OnInit()     {
@@ -80,13 +80,12 @@ int cnt, cntLimit, check;
 // MONEY MANAGEMENT
    double Lots =  maxLots;
    cnt = f_OrdersTotal(magic_number_1, ticketArr) + 1;   //how many open lots?
-   cntLimit =f_LimitOrders(magic_number_1, ticketArrLimit); //are there already limit orders placed? [in case of restart]
+   cntLimit = f_LimitOrders(magic_number_1, ticketArrLimit); //are there already limit orders placed? [in case of restart]
    contracts = f_Money_Management() - cnt;               //how many possible?
    double TakeProfit, StopLoss;
 // ENTER MARKET CONDITIONS
-    if( cnt < maxContracts && cntLimit < 0 )   { //if we are able to open new lots...
-      datetime expiration = StrToTime( (End_Hour-1)+":55" );
-      Print("expiration = "+ TimeToStr(expiration, TIME_DATE|TIME_MINUTES));
+    if( cnt < maxContracts && cntLimit < 0 )   { //if we are able to place new orders...
+      datetime expiration = StrToTime( End_Hour+":55" );
 // check for long position (BUY) possibility
       if(LongBuy == true )      { // pozycja z sygnalu
          price = NormalizeDouble(H, Digits);
