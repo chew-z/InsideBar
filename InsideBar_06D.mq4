@@ -85,7 +85,7 @@ int cnt, cntLimit, check;
    double TakeProfit, StopLoss;
 // ENTER MARKET CONDITIONS
     if( cnt < maxContracts && cntLimit < 0 )   { //if we are able to place new orders...
-      datetime expiration = StrToTime( End_Hour+":55" );
+      datetime expiration = StrToTime( (End_Hour-1)+":55" );
 // check for long position (BUY) possibility
       if(LongBuy == true )      { // pozycja z sygnalu
          price = NormalizeDouble(H, Digits);

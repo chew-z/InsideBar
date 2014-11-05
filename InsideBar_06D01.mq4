@@ -25,8 +25,11 @@ int ticketArr[], ticketArrLimit[];
 int OnInit()     {
    BarTime = 0;
    ArrayResize(ticketArr, maxContracts, maxContracts);
+   ArrayResize(ticketArrLimit, maxContracts, maxContracts);
    for(int i=0; i < maxContracts; i++) //re-initialize table with order tickets
         ticketArr[i] = 0;
+   for(i=0; i < maxContracts; i++) //re-initialize an array with limit order tickets
+      ticketArrLimit[i] = 0;
    AlertEmailSubject = Symbol() + " " + orderComment + " alert";
    if (Digits == 5 || Digits == 3){    // Adjust for five (5) digit brokers.
       pips2dbl    = Point*10; pips2points = 10;   Digits_pips = 1;
@@ -45,7 +48,9 @@ bool  ShortBuy = false, LongBuy = false;
 int cnt, cntLimit, check;
 
   if ( isNewDay ) {
-
+   Print("New Day. Server time = " + TimeHour( TimeCurrent() ) + ": Local time = "
+              + TimeHour( TimeLocal() )+ ": Bar Time = " + TimeHour(Time[0])+ ": ");
+   Print("Time shift = "+ f_TimeShift());
    cnt = f_OrdersTotal(magic_number_1, ticketArr); //-1 = no active orders
    while ( cnt >= 0) {                              //Print ("Ticket #", ticketArr[k]);
       if(OrderSelect(ticketArr[cnt], SELECT_BY_TICKET, MODE_TRADES) )   {
@@ -85,7 +90,11 @@ int cnt, cntLimit, check;
    double TakeProfit, StopLoss;
 // Next ENTER MARKET
     if( cnt < maxContracts && cntLimit < 0 )   { //if we are able to place new orders...
-      datetime expiration = StrToTime( End_Hour+":55" );
+      //datetime expiration = StrToTime( (End_Hour-1)+":55" );   //if NewDay occurs at 23 local time
+      gives time in the past  and fails during order placement
+      datetime expiration = Time[0] + (End_Hour-1)*3600 + 55*60; //this will work only for D1 and
+      still is tricky as Time[] will shift from 00:00 to 23:00
+      Print("expiration = " + TimeToStr(expiration));
 // check for long position (BUY) possibility
       if(LongBuy == true )      { // pozycja z sygnalu
          price = NormalizeDouble(H, Digits);
