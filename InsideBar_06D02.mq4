@@ -48,12 +48,13 @@ bool  ShortBuy = false, LongBuy = false;
 int cnt, cntLimit, check;
 
   if ( isNewDay ) {
-   Print("New Day. Server time = " + TimeHour( TimeCurrent() ) + ": Local time = "
-              + TimeHour( TimeLocal() )+ ": Bar Time = " + TimeHour(Time[0])+ ": ");
+   Print( "New Day. Server time = " + TimeHour( TimeCurrent() ) + ": Local time = "
+              + TimeHour( TimeLocal() )+ ": Bar Time = " + TimeHour(Time[0])+ ": " );
+   Print( "Time offset = "+ f_TimeOffset() );
+
    for(int i=0; i < maxContracts; i++) //re-initialize an array with order tickets
       ticketArr[i] = 0;
-
-   for(i=0; i < maxContracts; i++) //re-initialize an array with limit order tickets
+   for(i=0; i < maxContracts; i++)    //re-initialize an array with limit order tickets
       ticketArrLimit[i] = 0;
 
    int MotherBar = MotherBarD(K);
