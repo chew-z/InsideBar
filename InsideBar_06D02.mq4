@@ -11,13 +11,10 @@
 #include <stdlib.mqh>
 
 int magic_number_1 = 32547789;
-string AlertText ="";
-string  AlertEmailSubject  = "";
 string orderComment = "InsideBar_06D02";
 int contracts = 0;
 
 int StopLevel;
-static int BarTime;
 static int t; //
 int ticketArr[], ticketArrLimit[];
 
@@ -48,9 +45,9 @@ bool  ShortBuy = false, LongBuy = false;
 int cnt, cntLimit, check;
 
   if ( isNewDay ) {
-   Print( "New Day. Server time = " + TimeHour( TimeCurrent() ) + ": Local time = "
-              + TimeHour( TimeLocal() )+ ": Bar Time = " + TimeHour(Time[0])+ ": " );
-   Print( "Time offset = "+ f_TimeOffset() );
+   //Print( "New Day. Server time = " + TimeHour( TimeCurrent() ) + ": Local time = "
+   //           + TimeHour( TimeLocal() )+ ": Bar Time = " + TimeHour(Time[0])+ ": " );
+   //Print( "Time offset = "+ f_TimeOffset() );
 
    for(int i=0; i < maxContracts; i++) //re-initialize an array with order tickets
       ticketArr[i] = 0;
@@ -58,8 +55,9 @@ int cnt, cntLimit, check;
       ticketArrLimit[i] = 0;
 
    int MotherBar = MotherBarD(K);
-   L = Low[1];
-   H = High[1];
+   double spread = Ask - Bid;
+   L = NormalizeDouble(Low[1] , Digits); // - spread
+   H = NormalizeDouble(High[1] + spread, Digits);
 
 // DISCOVER SIGNALS
     if (MotherBar > 1 && isInsideBarD(MotherBar) && BarSizeD(1) > minBar*pips2dbl)
