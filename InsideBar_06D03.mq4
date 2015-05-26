@@ -31,6 +31,12 @@ int OnInit()     {
    if (Digits == 5 || Digits == 3){    // Adjust for five (5) digit brokers.
       pips2dbl    = Point*10; pips2points = 10;   Digits_pips = 1; dbl2pips = 0.1/Point;
    } else {    pips2dbl    = Point;    pips2points =  1;   Digits_pips = 0; dbl2pips = 1.0/Point; }
+
+   // .. and after all this
+   if( !IsConnected() )
+        Sleep( 5000 );  //wait 5s for establishing connection to trading server
+        //Sleep() is automatically passed during testing
+
    return(INIT_SUCCEEDED);
 }
 void OnDeinit(const int reason)   {
@@ -116,7 +122,7 @@ int cnt, cntLimit, check;
 
   //there could be a big diffence if you exit on close or on next open (think weekend gap)
 
-/*  
+/*
     if (TimeHour( TimeCurrent() ) == End_Hour && TimeDayOfYear( TimeCurrent() ) > TimeDayOfYear( OrderOpenTime() )) {
     cnt = f_OrdersTotal(magic_number_1, ticketArr); //-1 = no active orders
      while ( cnt >= 0) {                              //Print ("Ticket #", ticketArr[k]);
