@@ -122,27 +122,6 @@ int cnt, cntLimit, check;
 
   //there could be a big diffence if you exit on close or on next open (think weekend gap)
 
-/*
-    if (TimeHour( TimeCurrent() ) == End_Hour && TimeDayOfYear( TimeCurrent() ) > TimeDayOfYear( OrderOpenTime() )) {
-    cnt = f_OrdersTotal(magic_number_1, ticketArr); //-1 = no active orders
-     while ( cnt >= 0) {                              //Print ("Ticket #", ticketArr[k]);
-        if(OrderSelect(ticketArr[cnt], SELECT_BY_TICKET, MODE_TRADES) )   {
-  // EXIT MARKET [on next day Open, suboptimal]
-           if(OrderType() == OP_BUY || OrderType() == OP_SELL )   {
-                    if(TradeIsBusy() < 0) // Trade Busy semaphore
-                       break;
-                    RefreshRates();
-                    if (OrderType()==OP_SELL) price = Ask;
-                    if (OrderType()==OP_BUY)  price = Bid;
-                    check = OrderClose(OrderTicket(), OrderLots(), price, 5, Violet);
-                    TradeIsNotBusy();
-                    f_SendAlerts(orderComment + " trade exit attempted.\rResult = " + ErrorDescription(GetLastError()) + ". \rPrice = " + DoubleToStr(Ask, 5));
-           }
-         }//if OrderSelect
-        cnt--;
-      } //end while
-  }
-*/
 } // exit OnTick()
 
 
