@@ -1,21 +1,24 @@
 //+------------------------------------------------------------------+
-//             Copyright © 2012, 2013, 2014, 2015 chew-z     |
-// v .06D03 - InsideBar setup stub                                          |
-// 1) searches for Daily Inside Bars pattern within last K days      |
-// 2) this subversion exits at EndHour = last hour of trading day    |
-// 3) logic exactly? as in Python                                             |
+//             Copyright Â© 2012, 2013, 2014, 2015 chew-z            |
+// v .06D05 - InsideBar                                              |
+// 1) TP = true ATR                                                  |
+// 2) SafeMargin - few pips from H/L                                 |
+// 3)                                                                |
 //+------------------------------------------------------------------+
-#property copyright "InsideBar_06D04 � 2012-2015 chew-z"
+#property copyright "InsideBar_06D05 © 2012-2015 chew-z"
 #include <TradeContext.mq4>
 #include <TradeTools\TradeTools5.mqh>
 #include <stdlib.mqh>
 
 extern int MaxRisk = 200; //Maximum risk in pips
+extern int SafeMargin = 7; // Entry a bit outside of H/L
 
-int magic_number_1 = 32547799;
-string orderComment = "InsideBar_06D04";
+int magic_number_1 = 32549967;
+string orderComment = "InsideBar_06D05";
 int contracts = 0;
 
+double O;
+double trueATR;
 int StopLevel;
 static int t; //
 int ticketArr[], ticketArrLimit[];
@@ -66,7 +69,9 @@ int cnt, cntLimit, check;
          double spread = Ask - Bid;
          L = NormalizeDouble(Low[1] , Digits); // - spread
          H = NormalizeDouble(High[1] + spread, Digits);
-         Risk = (H-L)*dbl2pips;
+         O = Open[0];
+         trueATR = f_TrueATR(3, 1);
+         Risk = (H-L) * dbl2pips;
          if (IsTesting())
             RiskPLN = Risk; // During testing MarketInfo( "PAIR", MODE_ASK) is always 0;
          else
@@ -92,13 +97,13 @@ int cnt, cntLimit, check;
             Print("expiration = " + TimeToStr(expiration));
 // check for long position (BUY) possibility
             if(LongBuy == true )      { // pozycja z sygnalu
-                 price = NormalizeDouble(H, Digits);
+                 price = NormalizeDouble(H + SafeMargin * pips2dbl, Digits);
                  if (Risk < MaxRisk)  {
                     StopLoss = NormalizeDouble(L, Digits);
                     } else {
                     StopLoss = NormalizeDouble(H - MaxRisk * pips2dbl, Digits);
                     }
-                 TakeProfit = NormalizeDouble(0.0, Digits);
+                 TakeProfit = NormalizeDouble(O + trueATR, Digits);
  //--------Transaction        //Print (StopLoss," - ", price, " - ", TakeProfit);
                  if (price > Ask) {
                         check = f_SendOrders_OnLimit(OP_BUYSTOP, contracts, price, Lots, StopLoss, TakeProfit, magic_number_1, expiration, orderComment);
@@ -112,13 +117,13 @@ int cnt, cntLimit, check;
             }
 // check for short position (SELL) possibility
             if(ShortBuy == true )      { // pozycja z sygnalu
-                 price = NormalizeDouble(L, Digits);
+                 price = NormalizeDouble(L - SafeMargin * pips2dbl, Digits);
                  if (Risk < MaxRisk) {
                     StopLoss = NormalizeDouble(H, Digits);
                     } else {
                     StopLoss = NormalizeDouble(L + MaxRisk * pips2dbl, Digits);
                     }
-                 TakeProfit = NormalizeDouble(0.0, Digits);
+                 TakeProfit = NormalizeDouble(O - trueATR, Digits);
  //--------Transaction        //Print (TakeProfit, " - ", price, " - ", StopLoss);
                  if(price < Bid) {
                         check = f_SendOrders_OnLimit(OP_SELLSTOP, contracts, price, Lots, StopLoss, TakeProfit, magic_number_1, expiration, orderComment);
