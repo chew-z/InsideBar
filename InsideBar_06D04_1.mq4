@@ -1,19 +1,19 @@
 //+------------------------------------------------------------------+
 //             Copyright Â© 2012, 2013, 2014, 2015 chew-z            |
-// v .06D04 - InsideBar setup stub                                   |
+// v .06D04_1 - InsideBar                                            |
 // 1) searches for Daily Inside Bars pattern within last K days      |
 // 2)                                                                |
 // 3)                                                                |
 //+------------------------------------------------------------------+
-#property copyright "InsideBar_06D04 © 2012-2015 chew-z"
+#property copyright "InsideBar_06D04_1 © 2012-2015 chew-z"
 #include <TradeContext.mq4>
 #include <TradeTools\TradeTools5.mqh>
 #include <stdlib.mqh>
 
 extern int MaxRisk = 200; //Maximum risk in pips
 
-int magic_number_1 = 32547799;
-string orderComment = "InsideBar_06D04";
+int magic_number_1 = 32549977;
+string orderComment = "InsideBar_06D04_1";
 int contracts = 0;
 
 int StopLevel;
@@ -35,10 +35,6 @@ int OnInit()     {
      } else {    pips2dbl    = Point;    pips2points =  1;   Digits_pips = 0; dbl2pips = 1.0/Point; }
 
      // .. and after all this
-    Print("Lot size ", MarketInfo(Symbol(), MODE_LOTSIZE));
-    Print("Min lot ", MarketInfo(Symbol(), MODE_MINLOT));
-    Print("Lot step ", MarketInfo(Symbol(), MODE_LOTSTEP));
-    Print("Max lot ", MarketInfo(Symbol(), MODE_MAXLOT));
      if( !IsConnected() )
                 Sleep( 5000 );  //wait 5s for establishing connection to trading server
                 //Sleep() is automatically passed during testing
@@ -57,15 +53,16 @@ bool  ShortBuy = false, LongBuy = false;
 int cnt, cntLimit, check;
 
     if ( isNewDay ) {
-         Print( "New Day. Server time = " + TimeHour( TimeCurrent() ) + ": Local time = "
-                    + TimeHour( TimeLocal() )+ ": Bar Time = " + TimeHour(Time[0])+ ": " );
-         Print( "Time offset = "+ f_TimeOffset() );
+         //Print( "New Day. Server time = " + TimeHour( TimeCurrent() ) + ": Local time = "
+         //           + TimeHour( TimeLocal() )+ ": Bar Time = " + TimeHour(Time[0])+ ": " );
+         //Print( "Time offset = "+ f_TimeOffset() );
 
          for(int i=0; i < maxContracts; i++) //re-initialize an array with order tickets
                 ticketArr[i] = 0;
          for(i=0; i < maxContracts; i++)    //re-initialize an array with limit order tickets
                 ticketArrLimit[i] = 0;
 
+         int MotherBar = MotherBarD1(K);
          double spread = Ask - Bid;
          L = NormalizeDouble(Low[1] , Digits); // - spread
          H = NormalizeDouble(High[1] + spread, Digits);
@@ -75,8 +72,7 @@ int cnt, cntLimit, check;
          else
             RiskPLN = Risk * pipsValuePLN(Symbol());
 // DISCOVER SIGNALS
-        int MotherBar = MotherBarD(K);
-        if ( MotherBar > 1 && isInsideBarD(MotherBar) && isBarSignificant() ) {
+        if ( MotherBar > 1 && isInsideBarD1(MotherBar) && isBarSignificant() ) {
             LongBuy = True;
             ShortBuy = True;
         }
@@ -140,4 +136,40 @@ int cnt, cntLimit, check;
 
 } // exit OnTick()
 
+int MotherBarD1(int Range) { //find largest bar within last K bars
+double BarSizeArr[];
+ArrayResize(BarSizeArr, Range);
+for(int c = Range; c>=0; c--) {
+        BarSizeArr[c] = BarSizeD(c);
+        if (TimeDayOfWeek( iTime(NULL, PERIOD_D1, c) ) == 0) {
+            Print( "MotherBar1 - skipping Sunday inside bar ", TimeDay( iTime(NULL, PERIOD_D1, c) ) );
+            BarSizeArr[c] = 0.0;
+        }        
+}    
+    int MoBar = ArrayMaximum(BarSizeArr,WHOLE_ARRAY,1);
+    Print( "MotherBar1: ", TimeDay( iTime(NULL, PERIOD_D1, MoBar) ) );
+    return (MoBar);
+}
 
+bool isInsideBarD1(int k) { // is largest (k) bar completely overshadowing inside bar?
+  int i = 1;
+  if (TimeDayOfWeek( iTime(NULL, PERIOD_D1, i) ) == 0) {
+    Print( "isInsideBar - skipping Sunday inside bar ", TimeDay( iTime(NULL, PERIOD_D1, i) ) );
+    i += 1;
+  }
+  if (Low[k] < Low[i] && High[k] > High[i])
+    return true;
+
+return false;
+}
+
+bool isBarSignificant() { // is last bar large enough to validate the signal?
+    int i = 1;
+    if (TimeDayOfWeek( iTime(NULL, PERIOD_D1, i) ) == 0) {
+        Print( "isBarSignificant - skipping Sunday inside bar ", TimeDay( iTime(NULL, PERIOD_D1, i) ) );
+        i += 1;
+    }
+    if (BarSizeD(i) > minBar*pips2dbl)
+        return true;
+return false;
+}
