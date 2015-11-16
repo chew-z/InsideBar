@@ -65,7 +65,6 @@ int cnt, cntLimit, check;
          for(i=0; i < maxContracts; i++)    //re-initialize an array with limit order tickets
                 ticketArrLimit[i] = 0;
 
-         int MotherBar = MotherBarD(K);
          double spread = Ask - Bid;
          L = NormalizeDouble(Low[1] , Digits); // - spread
          H = NormalizeDouble(High[1] + spread, Digits);
@@ -77,10 +76,11 @@ int cnt, cntLimit, check;
          else
             RiskPLN = Risk * pipsValuePLN(Symbol());
 // DISCOVER SIGNALS
-        if (MotherBar > 1 && isInsideBarD(MotherBar) && BarSizeD(1) > minBar*pips2dbl)
+        int MotherBar = MotherBarD(K);
+        if ( MotherBar > 1 && isInsideBarD(MotherBar) && isBarSignificant() ) {
             LongBuy = True;
-        if (MotherBar > 1 && isInsideBarD(MotherBar) && BarSizeD(1) > minBar*pips2dbl)
             ShortBuy = True;
+        }
 // MONEY MANAGEMENT
          double Lots =  maxLots;
          //all this is a bit too complex 0, -1, etc.

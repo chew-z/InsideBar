@@ -5,15 +5,16 @@
 // 2)                                                                |
 // 3)                                                                |
 //+------------------------------------------------------------------+
-#property copyright "InsideBar_06D04 © 2012-2015 chew-z"
+#property copyright "InsideBar_06D04_2 © 2012-2015 chew-z"
 #include <TradeContext.mq4>
 #include <TradeTools\TradeTools5.mqh>
 #include <stdlib.mqh>
 
 extern int MaxRisk = 200; //Maximum risk in pips
+extern int MinRisk = 20; //Maximum risk in pips
 
 int magic_number_1 = 32547799;
-string orderComment = "InsideBar_06D04";
+string orderComment = "InsideBar_06D04_2";
 int contracts = 0;
 
 int StopLevel;
@@ -22,6 +23,7 @@ int ticketArr[], ticketArrLimit[];
 
 //--------------------------
 int OnInit()     {
+     EventSetTimer(900);
      BarTime = 0;
      ArrayResize(ticketArr, maxContracts, maxContracts);
      ArrayResize(ticketArrLimit, maxContracts, maxContracts);
@@ -46,7 +48,8 @@ int OnInit()     {
      return(INIT_SUCCEEDED);
 }
 void OnDeinit(const int reason)   {
-     Print(__FUNCTION__,"_Deinitalization reason code = ", getDeinitReasonText(reason));
+    EventKillTimer();
+    Print(__FUNCTION__,"_Deinitalization reason code = ", getDeinitReasonText(reason));
 }
 //-------------------------
 void OnTick()    {
@@ -66,18 +69,17 @@ int cnt, cntLimit, check;
          for(i=0; i < maxContracts; i++)    //re-initialize an array with limit order tickets
                 ticketArrLimit[i] = 0;
 
-        double spread = Ask - Bid;
+         double spread = Ask - Bid;
+         L = NormalizeDouble(Low[1] , Digits); // - spread
+         H = NormalizeDouble(High[1] + spread, Digits);
+         Risk = (H-L)*dbl2pips;
+         if (IsTesting())
+            RiskPLN = Risk; // During testing MarketInfo( "PAIR", MODE_ASK) is always 0;
+         else
+            RiskPLN = Risk * pipsValuePLN(Symbol());
 // DISCOVER SIGNALS
         int MotherBar = MotherBarD(K);
-        int InsideBar = InsideBarD(K);
-        L = NormalizeDouble(Low[InsideBar], Digits); // - spread
-        H = NormalizeDouble(High[InsideBar] + spread, Digits);
-        Risk = (H-L)*dbl2pips;
-        if (IsTesting())
-            RiskPLN = Risk; // During testing MarketInfo( "PAIR", MODE_ASK) is always 0;
-        else
-            RiskPLN = Risk * pipsValuePLN(Symbol());
-        if ( MotherBar > 1 && InsideBar > 0 && isBarSignificant(InsideBar) ) {
+        if ( MotherBar > 1 && isInsideBarD(MotherBar) && isBarSignificant() ) {
             LongBuy = True;
             ShortBuy = True;
         }
@@ -139,6 +141,49 @@ int cnt, cntLimit, check;
 
     } // if isNewDay
 
-} // exit OnTick()
+} // OnTick()
 
-
+void OnTimer() {
+double StopLoss, TakeProfit;
+int cnt, check;
+    for(int i=0; i < maxContracts; i++) //re-initialize an array with order tickets
+        ticketArr[i] = 0;
+    cnt = f_OrdersTotal(magic_number_1, ticketArr); //-1 = no active orders
+// Check for open orders
+    if (cnt < 0 )
+        return;
+// MODIFY ORDERS [move SL to breakeven]
+    while (cnt > -1) {                              //
+        if(OrderSelect(ticketArr[cnt], SELECT_BY_TICKET, MODE_TRADES) )   {
+            if( OrderType()== OP_BUY ) {
+                RefreshRates();
+                if ( High[0] - OrderOpenPrice() > MinRisk * pips2dbl )
+                    StopLoss = NormalizeDouble( High[0] - MinRisk * pips2dbl, Digits );
+                TakeProfit = OrderTakeProfit();
+                if ( StopLoss > OrderStopLoss() + 5*pips2dbl ) {
+                      if(TradeIsBusy() < 0) // Trade Busy semaphore
+                         break;
+                      check = OrderModify(OrderTicket(), OrderOpenPrice(), StopLoss, TakeProfit, 0, Gold);
+                      TradeIsNotBusy();
+                      AlertText = orderComment + " " + Symbol() + " BUY order modification attempted.\rResult = " + ErrorDescription(GetLastError()) + ". \rPrice = " + DoubleToStr(Ask, 5) + ", H = " + DoubleToStr(H, 5);
+                      f_SendAlerts(AlertText);
+                }
+            }
+            if( OrderType()==OP_SELL ) {
+                RefreshRates();
+                if ( OrderOpenPrice()- Low[0] > MinRisk * pips2dbl )
+                    StopLoss = NormalizeDouble( Low[0] + MinRisk * pips2dbl, Digits );
+                TakeProfit = OrderTakeProfit();
+                if ( StopLoss < OrderStopLoss() + 5*pips2dbl )  {
+                      if(TradeIsBusy() < 0) // Trade Busy semaphore
+                         break;
+                      check = OrderModify(OrderTicket(), OrderOpenPrice(), StopLoss, TakeProfit, 0, Gold);
+                      TradeIsNotBusy();
+                      AlertText = orderComment + " " + Symbol() + " SELL order modification attempted.\rResult = " + ErrorDescription(GetLastError()) + ". \rPrice = " + DoubleToStr(Bid, 5) + ", L = " + DoubleToStr(L, 5);
+                      f_SendAlerts(AlertText);
+                }
+            }
+        }//if OrderSelect
+        cnt--;
+    } //while cnt > -1
+} // OnTimer
