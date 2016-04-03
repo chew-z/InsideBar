@@ -11,7 +11,7 @@
 #include <stdlib.mqh>
 
 extern int MaxRisk = 200; //Maximum risk in pips
-extern int MinRisk = 20; //Maximum risk in pips
+# extern int MinRisk = 20; //Maximum risk in pips
 
 int magic_number_1 = 32547799;
 string orderComment = "InsideBar_06D04_2";
@@ -70,17 +70,20 @@ int cnt, cntLimit, check;
          for(i=0; i < maxContracts; i++)    //re-initialize an array with limit order tickets
                 ticketArrLimit[i] = 0;
 
-         double spread = Ask - Bid;
-         L = NormalizeDouble(Low[1] , Digits); // - spread
-         H = NormalizeDouble(High[1] + spread, Digits);
-         Risk = (H-L)*dbl2pips;
-         if (IsTesting())
-            RiskPLN = Risk; // During testing MarketInfo( "PAIR", MODE_ASK) is always 0;
-         else
-            RiskPLN = Risk * pipsValuePLN(Symbol());
+        double spread = Ask - Bid;
 // DISCOVER SIGNALS
         int MotherBar = MotherBarD(K);
-        if ( MotherBar > 1 && isInsideBarD(MotherBar) && isBarSignificant() ) {
+        Print("MotherBar: ", MotherBar);
+        int InsideBar = InsideBarD(MotherBar);
+        Print("InsideBar: ", InsideBar);
+        L = NormalizeDouble(Low[InsideBar], Digits); // - spread
+        H = NormalizeDouble(High[InsideBar] + spread, Digits);
+        Risk = (H-L)*dbl2pips;
+        if (IsTesting())
+            RiskPLN = Risk; // During testing MarketInfo( "PAIR", MODE_ASK) is always 0;
+        else
+            RiskPLN = Risk * pipsValuePLN(Symbol());
+        if ( MotherBar > 1 && InsideBar > 0 && isBarSignificant(InsideBar) ) {
             LongBuy = True;
             ShortBuy = True;
         }
@@ -100,8 +103,8 @@ int cnt, cntLimit, check;
             Print("expiration = " + TimeToStr(expiration));
 // check for long position (BUY) possibility
             if(LongBuy == true )      { // pozycja z sygnalu
-                 price = NormalizeDouble(L, Digits);
-                 StopLoss = NormalizeDouble(H - MinRisk * pips2dbl, Digits);
+                 price = NormalizeDouble(L , Digits);
+                 StopLoss = NormalizeDouble(L - MaxRisk * pips2dbl, Digits);
                  TakeProfit = NormalizeDouble(H, Digits);
  //--------Transaction        //Print (StopLoss," - ", price, " - ", TakeProfit);
                  if (price < Ask && Ask - price > StopLevel) {
@@ -117,7 +120,7 @@ int cnt, cntLimit, check;
 // check for short position (SELL) possibility
             if(ShortBuy == true )      { // pozycja z sygnalu
                  price = NormalizeDouble(H, Digits);
-                 StopLoss = NormalizeDouble(H + MinRisk * pips2dbl, Digits);
+                 StopLoss = NormalizeDouble(H + MaxRisk * pips2dbl, Digits);
                  TakeProfit = NormalizeDouble(L, Digits);
  //--------Transaction        //Print (TakeProfit, " - ", price, " - ", StopLoss);
                  if(price > Bid && pricec-cBid > StopLevel) {
@@ -145,13 +148,13 @@ int cnt, check;
 // Check for open orders
     if (cnt < 0 )
         return;
-// MODIFY ORDERS [move SL to breakeven]
+// MODIFY ORDERS [trail SL]
     while (cnt > -1) {                              //
         if(OrderSelect(ticketArr[cnt], SELECT_BY_TICKET, MODE_TRADES) )   {
             if( OrderType()== OP_BUY ) {
             RefreshRates();
-            if ( High[0] - OrderOpenPrice() > MinRisk * pips2dbl )
-                StopLoss = NormalizeDouble( High[0] - MinRisk * pips2dbl, Digits );
+            if ( High[0] - OrderOpenPrice() > MaxRisk * pips2dbl )
+                StopLoss = NormalizeDouble( Ask - MaxRisk * pips2dbl, Digits );
 
             TakeProfit = OrderTakeProfit();
             if ( StopLoss > OrderStopLoss() + 5*pips2dbl ) {
@@ -165,8 +168,8 @@ int cnt, check;
             }
             if( OrderType()==OP_SELL ) {
             RefreshRates();
-            if ( OrderOpenPrice()- Low[0] > MinRisk * pips2dbl )
-                StopLoss = NormalizeDouble( Low[0] + MinRisk * pips2dbl, Digits );
+            if ( OrderOpenPrice()- Low[0] > MaxRisk * pips2dbl )
+                StopLoss = NormalizeDouble( Bid + MaxRisk * pips2dbl, Digits );
             TakeProfit = OrderTakeProfit();
             if ( StopLoss < OrderStopLoss() + 5*pips2dbl )  {
                   if(TradeIsBusy() < 0) // Trade Busy semaphore

@@ -69,7 +69,9 @@ int cnt, cntLimit, check;
         double spread = Ask - Bid;
 // DISCOVER SIGNALS
         int MotherBar = MotherBarD(K);
-        int InsideBar = InsideBarD(K);
+        Print("MotherBar: ", MotherBar);
+        int InsideBar = InsideBarD(MotherBar);
+        Print("InsideBar: ", InsideBar);
         L = NormalizeDouble(Low[InsideBar], Digits); // - spread
         H = NormalizeDouble(High[InsideBar] + spread, Digits);
         Risk = (H-L)*dbl2pips;
