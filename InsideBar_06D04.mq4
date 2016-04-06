@@ -35,10 +35,9 @@ int OnInit()     {
      } else {    pips2dbl    = Point;    pips2points =  1;   Digits_pips = 0; dbl2pips = 1.0/Point; }
 
      // .. and after all this
-    Print("Lot size ", MarketInfo(Symbol(), MODE_LOTSIZE));
-    Print("Min lot ", MarketInfo(Symbol(), MODE_MINLOT));
-    Print("Lot step ", MarketInfo(Symbol(), MODE_LOTSTEP));
-    Print("Max lot ", MarketInfo(Symbol(), MODE_MAXLOT));
+    Print("Lot size ", MarketInfo(Symbol(), MODE_LOTSIZE), " Lot step ", MarketInfo(Symbol(), MODE_LOTSTEP));
+    Print("Min lot ", MarketInfo(Symbol(), MODE_MINLOT), " Max lot ", MarketInfo(Symbol(), MODE_MAXLOT));
+
      if( !IsConnected() )
                 Sleep( 5000 );  //wait 5s for establishing connection to trading server
                 //Sleep() is automatically passed during testing
@@ -57,8 +56,9 @@ bool  ShortBuy = false, LongBuy = false;
 int cnt, cntLimit, check;
 
     if ( isNewDay ) {
-         Print( "New Day. Server time = " + TimeHour( TimeCurrent() ) + ": Local time = "
-                    + TimeHour( TimeLocal() )+ ": Bar Time = " + TimeHour(Time[0])+ ": " );
+         Print( "New Day. Server time = " + TimeHour( TimeCurrent() ) + ":" + TimeMinute( TimeCurrent() )
+            + " Local time = " + TimeHour( TimeLocal() ) + ":" + TimeMinute( TimeLocal() )
+            + " Bar Time = " + TimeHour(Time[0])+ ": " );
          Print( "Time offset = "+ f_TimeOffset() );
 
          for(int i=0; i < maxContracts; i++) //re-initialize an array with order tickets
