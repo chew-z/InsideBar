@@ -58,8 +58,11 @@ int cnt, cntLimit, check;
     if ( isNewDay ) {
          Print( "New Day. Server time = " + TimeHour( TimeCurrent() ) + ":" + TimeMinute( TimeCurrent() )
             + " Local time = " + TimeHour( TimeLocal() ) + ":" + TimeMinute( TimeLocal() )
-            + " Bar Time = " + TimeHour(Time[0])+ ": " );
-         Print( "Time offset = "+ f_TimeOffset() );
+            + " Bar Time = " + TimeHour(Time[0])+ ": " + ":" + TimeMinute( Time[0] ) );
+         Print( "Time offset = " + f_TimeOffset() + " Time slip = " + f_TimeSlip());
+         if (f_TimeSlip() < 0) {
+            Sleep( MathAbs(f_TimeSlip()) * 1000 );
+         }
 
          for(int i=0; i < maxContracts; i++) //re-initialize an array with order tickets
                 ticketArr[i] = 0;
