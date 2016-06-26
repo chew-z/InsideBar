@@ -114,8 +114,10 @@ int cnt, cntLimit, check;
                         check = f_SendOrders_OnLimit(OP_BUYSTOP, contracts, price, Lots, StopLoss, TakeProfit, magic_number_1, expiration, orderComment);
  //--------
                     if(check == 0)         {
-                                AlertText = "BUY stop order placed : " + Symbol() + ", " + TFToStr(Period())+ " -\r"
-                                 + orderComment + " " + contracts + " order(s) opened. \rPrice = " + DoubleToStr(Ask, 5) + ",\rRisk = " + DoubleToStr(Risk, 0) + " (PLN " + DoubleToStr(RiskPLN, 0) + ")";
+                                AlertText = "BUY stop order placed: " + Symbol() + ", " + TFToStr(Period())+ " \r"
+                                 + orderComment + " " + contracts + " order(s) opened. \r"
+                                 + "Price = " + DoubleToStr(Ask, Digits) + " H = " + DoubleToStr(H, Digits) + "\r"
+                                 + "Risk = " + DoubleToStr(Risk, 0) + " (PLN " + DoubleToStr(RiskPLN, 0) + ")";
                      }  else { AlertText = "Error placing BUY stop order : " + ErrorDescription(check) + ". \rPrice = " + DoubleToStr(Ask, 5) + ", L = " + DoubleToStr(L, 5); }
                     f_SendAlerts(AlertText);
                 }
@@ -134,8 +136,10 @@ int cnt, cntLimit, check;
                         check = f_SendOrders_OnLimit(OP_SELLSTOP, contracts, price, Lots, StopLoss, TakeProfit, magic_number_1, expiration, orderComment);
      //--------
                         if(check == 0)         {
-                                     AlertText = "SELL stop order placed : " + Symbol() + ", " + TFToStr(Period())+ " -\r"
-                                     + orderComment + " " + contracts + " order(s) opened. \rPrice = " + DoubleToStr(Bid, 5) + ",\rRisk = " + DoubleToStr(Risk, 0) + " (PLN " + DoubleToStr(RiskPLN, 0) + ")";
+                                    AlertText = "SELL stop order placed: " + Symbol() + ", " + TFToStr(Period())+ " \r"
+                                     + orderComment + " " + contracts + " order(s) opened. \r"
+                                     + "Price = " + DoubleToStr(Bid, Digits) + " L = " + DoubleToStr(L, Digits) + "\r"
+                                     + "Risk = " + DoubleToStr(Risk, 0) + " (PLN " + DoubleToStr(RiskPLN, 0) + ")";
                          }  else { AlertText = "Error placing SELL stop order : " + ErrorDescription(check) + ". \rPrice = " + DoubleToStr(Bid, 5) + ", H = " + DoubleToStr(H, 5); }
                         f_SendAlerts(AlertText);
                  }
