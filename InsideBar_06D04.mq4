@@ -11,6 +11,8 @@
 #include <stdlib.mqh>
 
 extern int MaxRisk = 200; //Maximum risk in pips
+extern bool isLongAllowed = true; // Are we allowing Long positions? 
+extern bool isShortAllowed = true; // or Short positions?
 
 int magic_number_1 = 32547799;
 string orderComment = "InsideBar_06D04";
@@ -31,8 +33,8 @@ int OnInit()     {
             ticketArrLimit[i] = 0;
      AlertEmailSubject = Symbol() + " " + orderComment + " alert";
      if (Digits == 5 || Digits == 3){    // Adjust for five (5) digit brokers.
-            pips2dbl    = Point*10; pips2points = 10;   Digits_pips = 1; dbl2pips = 0.1/Point;
-     } else {    pips2dbl    = Point;    pips2points =  1;   Digits_pips = 0; dbl2pips = 1.0/Point; }
+            pips2dbl = Point*10; pips2points = 10;   Digits_pips = 1; dbl2pips = 0.1/Point;
+     } else {    pips2dbl = Point;    pips2points =  1;   Digits_pips = 0; dbl2pips = 1.0/Point; }
 
      // .. and after all this
     Print("Lot size ", MarketInfo(Symbol(), MODE_LOTSIZE), " Lot step ", MarketInfo(Symbol(), MODE_LOTSTEP));
@@ -83,8 +85,18 @@ int cnt, cntLimit, check;
         else
             RiskPLN = Risk * pipsValuePLN(Symbol());
         if ( MotherBar > 1 && InsideBar > 0 && isBarSignificant(InsideBar) ) {
-            LongBuy = True;
-            ShortBuy = True;
+            if ( isLongAllowed )
+                LongBuy = True;
+            else {
+                AlertText = "We might have taken signal for Long position but it's not allowed ";
+                f_SendAlerts(AlertText);
+            }
+            if ( isShortAllowed )
+                ShortBuy = True;
+            else {
+                AlertText = "We might have taken signal for Short position but it's not allowed ";
+                f_SendAlerts(AlertText);
+            }
         }
 // MONEY MANAGEMENT
          double Lots =  maxLots;
