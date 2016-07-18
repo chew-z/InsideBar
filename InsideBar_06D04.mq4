@@ -1,18 +1,14 @@
 //+------------------------------------------------------------------+
-//             Copyright Â© 2012, 2013, 2014, 2015 chew-z            |
+//             Copyright Â© 2012, 2013, 2014, 2015, 2016 chew-z      |
 // v .06D04 - InsideBar setup stub                                   |
 // 1) searches for Daily Inside Bars pattern within last K days      |
 // 2)                                                                |
 // 3)                                                                |
 //+------------------------------------------------------------------+
-#property copyright "InsideBar_06D04 © 2012-2015 chew-z"
+#property copyright "InsideBar_06D04 © 2012-2016 chew-z"
 #include <TradeContext.mq4>
 #include <TradeTools\TradeTools5.mqh>
 #include <stdlib.mqh>
-
-extern int MaxRisk = 200; //Maximum risk in pips
-extern bool isLongAllowed = true; // Are we allowing Long positions? 
-extern bool isShortAllowed = true; // or Short positions?
 
 int magic_number_1 = 32547799;
 string orderComment = "InsideBar_06D04";
@@ -35,11 +31,10 @@ int OnInit()     {
      if (Digits == 5 || Digits == 3){    // Adjust for five (5) digit brokers.
             pips2dbl = Point*10; pips2points = 10;   Digits_pips = 1; dbl2pips = 0.1/Point;
      } else {    pips2dbl = Point;    pips2points =  1;   Digits_pips = 0; dbl2pips = 1.0/Point; }
-
      // .. and after all this
-    Print("Lot size ", MarketInfo(Symbol(), MODE_LOTSIZE), " Lot step ", MarketInfo(Symbol(), MODE_LOTSTEP));
-    Print("Min lot ", MarketInfo(Symbol(), MODE_MINLOT), " Max lot ", MarketInfo(Symbol(), MODE_MAXLOT));
-
+    Print("Lot size ", MarketInfo(Symbol(), MODE_LOTSIZE), ", Point = ", DoubleToStr(Point, Digits));
+    Print("Point size [$] = ", f_pointUSD(Symbol()), ", Tick [$] =", MarketInfo(Symbol(), MODE_TICKVALUE)/MarketInfo("USDPLN", MODE_ASK));
+    Print("Maximum risk % [$] {experimental} = ", f_riskUSD(Symbol()));
      if( !IsConnected() )
                 Sleep( 5000 );  //wait 5s for establishing connection to trading server
                 //Sleep() is automatically passed during testing
