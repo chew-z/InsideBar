@@ -48,7 +48,7 @@ void OnDeinit(const int reason)   {
 void OnTick()    {
 bool isNewBar = NewBar();
 bool isNewDay = NewDay2();
-double price, Risk, RiskPLN;
+double price, Risk, RiskPLN, RiskTicks;
 bool  ShortBuy = false, LongBuy = false;
 int cnt, cntLimit, check;
 
@@ -77,8 +77,11 @@ int cnt, cntLimit, check;
         Risk = (H-L)*dbl2pips;
         if (IsTesting())
             RiskPLN = Risk; // During testing MarketInfo( "PAIR", MODE_ASK) is always 0;
-        else
+        else {
             RiskPLN = Risk * pipsValuePLN(Symbol());
+            RiskTicks = RiskPLN / MarketInfo(Symbol(), MODE_TICKVALUE);
+            Print("Risk [PLN] = ", RiskPLN, ", Risk [Ticks] = ", RiskTicks);
+        }
         if ( MotherBar > 1 && InsideBar > 0 && isBarSignificant(InsideBar) ) {
             if ( isLongAllowed )
                 LongBuy = True;
